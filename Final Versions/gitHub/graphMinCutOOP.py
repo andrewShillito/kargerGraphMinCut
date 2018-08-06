@@ -67,7 +67,7 @@ class Graph(object):
         return None
     
     def __str__(self):
-        ansString = ''
+        ansString = '\nGraph: Node-->Edges\n'
         for node in list(self.graph.keys()):
             ansString+= node.getName()+" --> "
             for edge in self.graph[node]:
@@ -116,18 +116,9 @@ class Edge(object):
     def getDest(self):
         return self.head
     
-#n1 = Node('1')
-#n2 = Node('2')
-#n3 = Node('3')
-#graph = Graph()
-#graph.addNode(n1)
-#graph.addNode(n2)
-#graph.addNode(n3)
-#graph.addEdge(n1, n2)
-#graph.addEdge(n1, n3)
-#graph.addEdge(n3, n2)
-#graph.addEdge(n3, n1)
-#graph.removeEdge(graph.getEdges()[0])
+    def __str__(self):
+        ansString = "Edge: "+self.tail.name+" --> "+self.head.name
+        return ansString
 
 def constructGraph():
     directory = os.path.abspath("..")+"\\testCases"
@@ -184,6 +175,7 @@ def testFileRead(fileName, graph):
 def outputFileRead(fileName):
     file = open(fileName)
     for line in file:
-        ans = line[0]
+        temp = re.split(r'\D', line)
+        ans = temp[0]
     file.close()
     return ans
