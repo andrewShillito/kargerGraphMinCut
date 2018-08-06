@@ -5,19 +5,8 @@ Created on Tue Jul 31 19:34:35 2018
 
 @author: Andrew Shillito
 
-Current issues:
-    no testing for node membership when adding edges
-    
-    Node.nodeList as class wide var doesn't allow for multiple graph
-    constructions in single run unless it is cleared before each
-    which could be done
-    
-    the checking for duplicate edges is incorrect in graph builder
-    (and unfinished)
-    
-    currently the graph keys are node objects which is creating problems
-    when trying to index into the graph while adding edges in constructor
-    
+Current issues:    
+    Finally fixed edge issue when constructing new graphs
 """
 
 import random, copy, os, re, pdb
@@ -60,10 +49,11 @@ class Graph(object):
     
     def addEdge(self, node, otherNode):
         newEdge = Edge(node, otherNode)
+#        revEdge = Edge(otherNode, node)
         self.graph[node].append(newEdge)
-        self.graph[otherNode].append(newEdge)
+#        self.graph[otherNode].append(revEdge)
         self.edges.append(newEdge)
-    #appends the same edge referenced all three places
+#        self.edges.append(revEdge)
         return None
     
     def removeEdge(self, edge):
@@ -92,14 +82,24 @@ class Graph(object):
 
 class Node(object):
     
-    nodeList = []
+    nodeDict = {} #purely for building graphs from the files given
     
     def __init__(self, name): #edges a list of edges??
-        self.name = name
-        Node.nodeList.append(name)
+        if name in Node.nodeDict:
+            print("KeyError: A Node with that name already exists")
+            raise KeyError
+        else:
+            self.name = name
+            Node.nodeDict[name]=self
     
     def getName(self):
         return self.name
+    
+    def getNodeByName(name):
+        try:
+            return Node.nodeDict[name]
+        except KeyError:
+            return False
     
 class Edge(object):
     def __init__(self, tail, head):
@@ -133,43 +133,43 @@ def constructGraph():
     graphs = []
     outputs = []
     testFiles = [i for i in os.listdir(directory) if "Output" not in i and ".rtf" not in i]
-    print(testFiles)
+#    print(testFiles)
     outputFiles = [j for j in os.listdir(directory) if "Output" in j]
-    print(outputFiles)
+#    print(outputFiles)
     for x in range(len(testFiles)):
         graph = Graph()
         testFileRead(directory+"\\"+testFiles[x], graph)
         outputs.append(outputFileRead(directory+"\\"+outputFiles[x]))
         graphs.append(graph)
-        Node.nodeList = []
+        Node.nodeDict = {}
     return graphs, outputs
 
 def testFileRead(fileName, graph):
     file = open(fileName)
 #    pdb.set_trace()
     for line in file:
+        flag = 0 #keeps track of if temp[0] already exists as a Node.nodeDict key
         temp = re.split(r"\D", line)
         while "" in temp:
             temp.remove('')
-        if temp[0] not in Node.nodeList:    
+#        node = (Node.getNodeByName(temp[0]) or Node(temp[0]))
+        if temp[0] not in Node.nodeDict:    
+            #node by that name does not exist
             node = Node(temp[0])
             graph.addNode(node)
         else:
-            for i in list(graph.graph.keys()):
-                if i.name==temp[0]:
-                    node = i
-                    break
+            #node by that name already exists
+            node = Node.getNodeByName(temp[0])
+            flag+=1
         for destNode in temp[1:]:
-            if destNode not in Node.nodeList:
-                otherNode = Node(destNode)
-                graph.addNode(otherNode)
-                graph.addEdge(node, otherNode)
+            existingNode = Node.getNodeByName(destNode)
+            if existingNode:
+                graph.addEdge(node, existingNode)
             else:
-                for j in list(graph.graph.keys()):
-                    if j.name==destNode:
-                        otherNode=j
-                        break
-#                if 
+                #key(node) does not exist
+                newNode = Node(destNode)
+                graph.addNode(newNode)
+                graph.addEdge(node, newNode)
     file.close()
     return None
     
