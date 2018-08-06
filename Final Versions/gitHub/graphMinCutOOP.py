@@ -5,8 +5,10 @@ Created on Tue Jul 31 19:34:35 2018
 
 @author: Andrew Shillito
 
-Current issues:    
-    Finally fixed edge issue when constructing new graphs
+Current Status:
+    fixed graph constructor
+    edgeId's removed
+    edgeIdDict removed
 """
 
 import random, copy, os, re, pdb
@@ -49,11 +51,9 @@ class Graph(object):
     
     def addEdge(self, node, otherNode):
         newEdge = Edge(node, otherNode)
-#        revEdge = Edge(otherNode, node)
         self.graph[node].append(newEdge)
-#        self.graph[otherNode].append(revEdge)
+        self.graph[otherNode].append(newEdge)
         self.edges.append(newEdge)
-#        self.edges.append(revEdge)
         return None
     
     def removeEdge(self, edge):
@@ -95,7 +95,7 @@ class Node(object):
     def getName(self):
         return self.name
     
-    def getNodeByName(name):
+    def getNodeByName(name): #only used for graph construction
         try:
             return Node.nodeDict[name]
         except KeyError:
@@ -103,15 +103,9 @@ class Node(object):
     
 class Edge(object):
     
-    edgeIdDict = {}
-    edgeId = 0
-    
     def __init__(self, tail, head):
         self.tail = tail
         self.head = head
-        self.id = Edge.edgeId
-        Edge.edgeIdDict[self.id]=self
-        Edge.edgeId+=1
 
     def getNodes(self):
         return (self.tail, self.head)
@@ -121,9 +115,6 @@ class Edge(object):
     
     def getDest(self):
         return self.head
-    
-    def getEdgeById(ID):
-        return Edge.edgeIdDict[ID]
     
 #n1 = Node('1')
 #n2 = Node('2')
@@ -157,29 +148,36 @@ def constructGraph():
 def testFileRead(fileName, graph):
     file = open(fileName)
 #    pdb.set_trace()
-    for line in file:
-        flag = 0 #keeps track of if temp[0] already exists as a Node.nodeDict key
+    for line in file: #first build the graph nodes
         temp = re.split(r"\D", line)
         while "" in temp:
             temp.remove('')
-#        node = (Node.getNodeByName(temp[0]) or Node(temp[0]))
-        if temp[0] not in Node.nodeDict:    
-            #node by that name does not exist
-            node = Node(temp[0])
-            graph.addNode(node)
+        node = Node(temp[0])
+        graph.addNode(node)
+#    print(graph, "\n")
+    file.close()
+    file = open(fileName)
+    for linePass2 in file: #now add the edges
+        temp = re.split(r"\D", linePass2)
+        while "" in temp:
+            temp.remove('')
+        node = Node.getNodeByName(temp[0])
+        temp = temp[1:] #isolate edges
+        if len(graph.graph[node])==0:
+            for i in temp:
+                otherNode = Node.getNodeByName(i)
+                graph.addEdge(node, otherNode)
         else:
-            #node by that name already exists
-            node = Node.getNodeByName(temp[0])
-            flag+=1
-        for destNode in temp[1:]:
-            existingNode = Node.getNodeByName(destNode)
-            if existingNode:
-                graph.addEdge(node, existingNode)
-            else:
-                #key(node) does not exist
-                newNode = Node(destNode)
-                graph.addNode(newNode)
-                graph.addEdge(node, newNode)
+            #this node is a head for an edge
+            #find src node of each edge
+            #remove src node name from temp if present
+            #continue and add all remaining edges as normal
+            for edge in graph.graph[node]:
+                if edge.getSrc().name in temp:
+                    temp.remove(edge.getSrc().name)
+            for j in temp:
+                otherNode = Node.getNodeByName(j)
+                graph.addEdge(node, otherNode)
     file.close()
     return None
     
@@ -189,4 +187,3 @@ def outputFileRead(fileName):
         ans = line[0]
     file.close()
     return ans
-    
