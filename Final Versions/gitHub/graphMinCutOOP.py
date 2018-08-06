@@ -102,9 +102,16 @@ class Node(object):
             return False
     
 class Edge(object):
+    
+    edgeIdDict = {}
+    edgeId = 0
+    
     def __init__(self, tail, head):
         self.tail = tail
         self.head = head
+        self.id = Edge.edgeId
+        Edge.edgeIdDict[self.id]=self
+        Edge.edgeId+=1
 
     def getNodes(self):
         return (self.tail, self.head)
@@ -114,6 +121,9 @@ class Edge(object):
     
     def getDest(self):
         return self.head
+    
+    def getEdgeById(ID):
+        return Edge.edgeIdDict[ID]
     
 #n1 = Node('1')
 #n2 = Node('2')
