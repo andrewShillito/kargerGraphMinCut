@@ -6,9 +6,8 @@ Created on Tue Jul 31 19:34:35 2018
 @author: Andrew Shillito
 
 Current Status:
-    fixed graph constructor
-    edgeId's removed
-    edgeIdDict removed
+    Creation of newNode edges now works using set XOR
+    need to modify other existing node lists - look into more set operations
 """
 
 import random, copy, os, re, pdb
@@ -23,18 +22,66 @@ class Graph(object):
     
     def getEdges(self):
         return self.edges[:]
+  
+    def contractNodes(self):
+        """"""
+        edge = self.selectEdge() #select random edge
+        print("Selected", edge)
+        source = edge.getSrc() #find source node
+        dest = edge.getDest() #find destination node
+        newNodeName = source.getName()+', '+dest.getName()
+        #create new superNode
+        newNode = Node(newNodeName)
+        self.addNode(newNode) #just leave as is - broke program somehow when I changed addNode function
+        
+        #show edgeList components that are from self.graph[source] or self.graph[dest]
+        testString = []
+        for i in self.edges:
+            if i in self.graph[source] or i in self.graph[dest]:
+                testString.append(str(i)[6:])
+        print("Relevant Self Edges: "+', '.join(testString))
+        
+        #removing from self.edges
+        for x in self.graph[source]:
+            self.edges.remove(x)
+        for y in self.graph[dest]:
+            try:
+                self.edges.remove(y)
+            except ValueError:
+                pass
+        
+        #show modified edgeList            
+        testString = []
+        for j in self.edges:
+            if j in self.graph[source] or j in self.graph[dest]:
+                testString.append(str(j)[6:])
+        print("Self Edges: "+', '.join(testString))
+#        print("set: ", set(self.graph[source]+self.graph[dest]))
 
-    def combineNodes(self, node, otherNode):
-        return None
-    
-    def contractNodes(self, edge):
+         #show set operation result
+#        testString = []
+#        for z in set(self.graph[source])^set(self.graph[dest]): #I think this works
+#            testString.append(str(z)[6:])
+#        print("Set: "+', '.join(testString))
+        
+        self.graph[newNode]=[i for i in (set(self.graph[source])^set(self.graph[dest]))]
+        
+        del self.graph[source]
+        del self.graph[dest]
+        #associate edges in self.graph with new Node
+        #make sure no self-loops in self.graph or self.edges
+        #delete old nodes and related edges from self.graph and self.edges
+        print(self)
         return None
     
     def selectEdge(self):
         randEdge = random.sample(self.edges, 1)[0]
         return randEdge
     
-    def removeSelfLoops(self, node, otherNode):
+    def removeSelfLoops(self, node, otherNode, edge):
+        return None
+    
+    def contract(self, node, otherNode):
         return None
     
     def addNode(self, node):
@@ -68,14 +115,11 @@ class Graph(object):
     
     def __str__(self):
         ansString = '\nGraph: Node-->Edges\n'
-        for node in list(self.graph.keys()):
+        for node in self.graph:
             ansString+= node.getName()+" --> "
             for edge in self.graph[node]:
                 temp = edge.getNodes()
-                for i in temp:
-                    if i!=node:
-                        ansString+= i.getName()+', '
-                        break
+                ansString+='('+temp[0].getName()+', '+temp[1].getName()+')'+', '
             ansString = ansString[:-2]+'\n'
         return ansString[:-1]
     
@@ -100,6 +144,9 @@ class Node(object):
             return Node.nodeDict[name]
         except KeyError:
             return False
+        
+    def __str__(self):
+        return "Node: "+self.name
     
 class Edge(object):
     
@@ -179,3 +226,27 @@ def outputFileRead(fileName):
         ans = temp[0]
     file.close()
     return ans
+
+def graphMinCut(graph, numTests):
+    """graphMinCut takes graph of nodes/edges, duplicates it using copy.deepcopy() 
+    and run's karger's contraction algorithm numTests times.
+    graph.contractNodes() is the actual algorithm
+    returns best (shortest length) min cut num"""
+    best = 100000 #arbitrarily large num
+    for i in range(numTests):
+        testGraph = copy.deepCopy(graph)
+        while len(testGraph)>2:
+            testGraph.contractNodes() #this is the hub for the entire algorithm
+        for node in testGraph: #exactly 2 tests but each should be the same length
+            if len(testGraph[node])<best:
+                best = len(testGraph[node])
+                minCutGraph = copy.deepCopy(testGraph)
+    return best, minCutGraph
+
+def testProgram():
+    graphList = constructGraph()[0]
+    ans = graphList[0]
+    print(ans, "\n")
+    ans.contractNodes()
+    return ans #for now - graphList later
+    
