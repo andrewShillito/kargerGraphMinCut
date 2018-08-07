@@ -180,7 +180,7 @@ def constructGraph():
     for x in range(len(testFiles)):
         graph = Graph()
         testFileRead(directory+testFiles[x], graph)
-        outputs.append(outputFileRead(directory+"\\"+outputFiles[x]))
+        outputs.append(outputFileRead(directory+outputFiles[x]))
         graphs.append(graph)
         Node.nodeDict = {}
     return graphs, outputs
@@ -246,7 +246,8 @@ def graphMinCut(graph, numTests):
     return best, minCutGraph
 
 def testProgram():
-    graphList = constructGraph()[0]
+    graphList, outputs = constructGraph()
+#    print(outputs)
     ans = graphList[0]
     print(ans, "\n")
     ans.contractNodes()
