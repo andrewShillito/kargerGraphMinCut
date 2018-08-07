@@ -8,6 +8,8 @@ Created on Tue Jul 31 19:34:35 2018
 Current Status:
     Creation of newNode edges now works using set XOR
     need to modify other existing node lists - look into more set operations
+    
+    maybe should use sets instead of lists for graph[node]-edges
 """
 
 import random, copy, os, re, pdb
@@ -34,14 +36,14 @@ class Graph(object):
         newNode = Node(newNodeName)
         self.addNode(newNode) #just leave as is - broke program somehow when I changed addNode function
         
-        #show edgeList components that are from self.graph[source] or self.graph[dest]
-        testString = []
-        for i in self.edges:
-            if i in self.graph[source] or i in self.graph[dest]:
-                testString.append(str(i)[6:])
-        print("Relevant Self Edges: "+', '.join(testString))
+        #show edgeList components that are from self.graph[source] or self.graph[dest] - seems to work
+#        testString = []
+#        for i in self.edges:
+#            if i in self.graph[source] or i in self.graph[dest]:
+#                testString.append(str(i)[6:])
+#        print("Relevant Self Edges: "+', '.join(testString)) - seems to work correctly
         
-        #removing from self.edges
+        #removing from self.edges - seems to work correctly
         for x in self.graph[source]:
             self.edges.remove(x)
         for y in self.graph[dest]:
@@ -50,12 +52,12 @@ class Graph(object):
             except ValueError:
                 pass
         
-        #show modified edgeList            
-        testString = []
-        for j in self.edges:
-            if j in self.graph[source] or j in self.graph[dest]:
-                testString.append(str(j)[6:])
-        print("Self Edges: "+', '.join(testString))
+        #show modified edgeList - seems to be modifying correctly
+#        testString = []
+#        for j in self.edges:
+#            if j in self.graph[source] or j in self.graph[dest]:
+#                testString.append(str(j)[6:])
+#        print("Self Edges: "+', '.join(testString))
 #        print("set: ", set(self.graph[source]+self.graph[dest]))
 
          #show set operation result
@@ -64,7 +66,7 @@ class Graph(object):
 #            testString.append(str(z)[6:])
 #        print("Set: "+', '.join(testString))
         
-        self.graph[newNode]=[i for i in (set(self.graph[source])^set(self.graph[dest]))]
+        self.graph[newNode]=list(set(self.graph[source])^set(self.graph[dest]))
         
         del self.graph[source]
         del self.graph[dest]
@@ -168,16 +170,16 @@ class Edge(object):
         return ansString
 
 def constructGraph():
-    directory = os.path.abspath("..")+"\\testCases"
+    directory = os.getcwd()+"\\testCases\\"
     graphs = []
     outputs = []
-    testFiles = [i for i in os.listdir(directory) if "Output" not in i and ".rtf" not in i]
+    testFiles = [i for i in os.listdir(directory) if "Output" not in i and ".rtf" not in i and "karger" not in i]
 #    print(testFiles)
     outputFiles = [j for j in os.listdir(directory) if "Output" in j]
 #    print(outputFiles)
     for x in range(len(testFiles)):
         graph = Graph()
-        testFileRead(directory+"\\"+testFiles[x], graph)
+        testFileRead(directory+testFiles[x], graph)
         outputs.append(outputFileRead(directory+"\\"+outputFiles[x]))
         graphs.append(graph)
         Node.nodeDict = {}
