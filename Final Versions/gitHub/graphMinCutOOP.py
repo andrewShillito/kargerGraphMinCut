@@ -26,12 +26,13 @@ class Graph(object):
         return self.edges[:]
   
     def contractNodes(self):
-        """"""
+        """Karger's algorithm for random node contraction"""
         edge = self.selectEdge() #select random edge
         print("Selected", edge)
         source = edge.getSrc() #find source node
         dest = edge.getDest() #find destination node
         newNodeName = source.getName()+', '+dest.getName()
+        
         #create new superNode
         newNode = Node(newNodeName)
         self.addNode(newNode) #just leave as is - broke program somehow when I changed addNode function
@@ -41,16 +42,11 @@ class Graph(object):
 #        for i in self.edges:
 #            if i in self.graph[source] or i in self.graph[dest]:
 #                testString.append(str(i)[6:])
-#        print("Relevant Self Edges: "+', '.join(testString)) - seems to work correctly
+#        print("Relevant Self Edges: "+', '.join(testString))# - seems to work correctly
         
-        #removing from self.edges - seems to work correctly
-        for x in self.graph[source]:
-            self.edges.remove(x)
-        for y in self.graph[dest]:
-            try:
-                self.edges.remove(y)
-            except ValueError:
-                pass
+        #removes all edges from self.edges that are in self.graph[source] or self.graph[dest]
+#        pdb.set_trace()
+#        self.removeFromSelfEdges(source, dest)
         
         #show modified edgeList - seems to be modifying correctly
 #        testString = []
@@ -58,9 +54,9 @@ class Graph(object):
 #            if j in self.graph[source] or j in self.graph[dest]:
 #                testString.append(str(j)[6:])
 #        print("Self Edges: "+', '.join(testString))
-#        print("set: ", set(self.graph[source]+self.graph[dest]))
-
+#         
          #show set operation result
+#        print("set: ", set(self.graph[source]+self.graph[dest]))
 #        testString = []
 #        for z in set(self.graph[source])^set(self.graph[dest]): #I think this works
 #            testString.append(str(z)[6:])
@@ -68,12 +64,51 @@ class Graph(object):
         
         self.graph[newNode]=list(set(self.graph[source])^set(self.graph[dest]))
         
+        #possible way to update self.graph and self.edges
+        pdb.set_trace()
+        self.updateEdges(source, dest, newNode)
+        self.updateGraph(source, dest, newNode)
+        
         del self.graph[source]
         del self.graph[dest]
         #associate edges in self.graph with new Node
         #make sure no self-loops in self.graph or self.edges
         #delete old nodes and related edges from self.graph and self.edges
         print(self)
+        return None
+    
+    def removeFromSelfEdges(self, source, dest):
+        """removes edges that were in source or dest node in order to prepare to add correct ones"""
+        for x in self.graph[source]:
+            self.edges.remove(x)
+        for y in self.graph[dest]:
+            try:
+                self.edges.remove(y)
+            except ValueError:
+                pass
+        return None
+    
+    def updateEdges(self, source, dest, newNode):
+        """iterate over self.edges and change the source or dest node of related edges to the new supernode"""
+        sourceName = source.getName()
+        destName = dest.getName()
+        for i in self.edges:
+            if i.getSrc()==sourceName or i.getSrc()==destName:
+                i.setSrc(newNode)
+            elif i.getDest()==sourceName or i.getDest()==destName:
+                i.setDest(newNode)
+        return None
+    
+    def updateGraph(self, source, dest, newNode):
+        """computationally expensive"""
+        sourceName = source.getName()
+        destName = dest.getName()
+        for i in self.graph:
+            for j in self.graph[i]:
+                if j.getSrc()==sourceName or j.getSrc()==destName:
+                    j.setSrc(newNode)
+                elif j.getDest()==sourceName or j.getDest()==destName:
+                    j.setDest(newNode)
         return None
     
     def selectEdge(self):
@@ -164,6 +199,14 @@ class Edge(object):
     
     def getDest(self):
         return self.head
+    
+    def setSrc(self, source):
+        self.tail = source
+        return None
+    
+    def setDest(self, dest):
+        self.head = dest
+        return None
     
     def __str__(self):
         ansString = "Edge: "+self.tail.name+" --> "+self.head.name
