@@ -65,8 +65,10 @@ class Graph(object):
         self.graph[newNode]=list(set(self.graph[source])^set(self.graph[dest]))
         
         #possible way to update self.graph and self.edges
-        pdb.set_trace()
+#        pdb.set_trace()
+        print([str(i)[6:] for i in self.edges])
         self.updateEdges(source, dest, newNode)
+        print([str(i)[6:] for i in self.edges])
         self.updateGraph(source, dest, newNode)
         
         del self.graph[source]
@@ -90,24 +92,26 @@ class Graph(object):
     
     def updateEdges(self, source, dest, newNode):
         """iterate over self.edges and change the source or dest node of related edges to the new supernode"""
-        sourceName = source.getName()
-        destName = dest.getName()
         for i in self.edges:
-            if i.getSrc()==sourceName or i.getSrc()==destName:
+            #for self-looping nodes - I believe there is an indexing issue when removing edges
+            if i.getSrc()==source and i.getDest()==dest:
+                self.edges.remove(i)
+            elif i.getSrc()==dest and i.getDest()==source:
+                self.edges.remove(i)
+            #works for non self-loops
+            elif i.getSrc()==source or i.getSrc()==dest:
                 i.setSrc(newNode)
-            elif i.getDest()==sourceName or i.getDest()==destName:
+            elif i.getDest()==source or i.getDest()==dest:
                 i.setDest(newNode)
         return None
     
     def updateGraph(self, source, dest, newNode):
         """computationally expensive"""
-        sourceName = source.getName()
-        destName = dest.getName()
         for i in self.graph:
             for j in self.graph[i]:
-                if j.getSrc()==sourceName or j.getSrc()==destName:
+                if j.getSrc()==source or j.getSrc()==dest:
                     j.setSrc(newNode)
-                elif j.getDest()==sourceName or j.getDest()==destName:
+                elif j.getDest()==source or j.getDest()==dest:
                     j.setDest(newNode)
         return None
     
