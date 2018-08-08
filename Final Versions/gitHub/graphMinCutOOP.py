@@ -10,6 +10,10 @@ Current Status:
     need to modify other existing node lists - look into more set operations
     
     maybe should use sets instead of lists for graph[node]-edges
+    
+    the updateEdges func now works and also removes self-loops
+    however, it would be most efficient to also change the edges
+    of self.graph at the same time and to avoid creating new edges
 """
 
 import random, copy, os, re, pdb
@@ -79,34 +83,17 @@ class Graph(object):
         print(self)
         return None
     
-    def removeFromSelfEdges(self, source, dest):
-        """removes edges that were in source or dest node in order to prepare to add correct ones"""
-        for x in self.graph[source]:
-            self.edges.remove(x)
-        for y in self.graph[dest]:
-            try:
-                self.edges.remove(y)
-            except ValueError:
-                pass
-        return None
-    
     def updateEdges(self, source, dest, newNode):
-        """iterate over self.edges and change the source or dest node of related edges to the new supernode"""
-        for i in self.edges:
-            #for self-looping nodes - I believe there is an indexing issue when removing edges
-            if i.getSrc()==source and i.getDest()==dest:
-                self.edges.remove(i)
-            elif i.getSrc()==dest and i.getDest()==source:
-                self.edges.remove(i)
-            #works for non self-loops
-            elif i.getSrc()==source or i.getSrc()==dest:
-                i.setSrc(newNode)
-            elif i.getDest()==source or i.getDest()==dest:
-                i.setDest(newNode)
+        """Change source nodes/dest nodes of self.edges to newNode if necessary
+        also removes self-loops - doesn't work - also would be preferable to use setters"""
+        self.edges[:] = [edge if (edge.getSrc()!=source and edge.getDest()!=dest) and (edge.getSrc()!=dest and edge.getDest()!=source)\
+                  else Edge(newNode, edge.head) if (edge.getSrc()==source or edge.getDest()==dest)\
+                  else Edge(edge.tail, newNode) if (edge.getDest()==source or edge.getDest()==dest) else edge for edge in self.edges]        
         return None
     
     def updateGraph(self, source, dest, newNode):
         """computationally expensive"""
+        self.graph = {node:[Edge(newNode, edge.head) if (edge.getSrc()==source or edge.getSrc()==dest) else Edge(edge.tail, newNode) if (edge.getDest()==source or edge.getDest()==dest) else edge for edge in self.graph[node]] for node in self.graph}
         for i in self.graph:
             for j in self.graph[i]:
                 if j.getSrc()==source or j.getSrc()==dest:
@@ -160,7 +147,7 @@ class Graph(object):
             ansString+= node.getName()+" --> "
             for edge in self.graph[node]:
                 temp = edge.getNodes()
-                ansString+='('+temp[0].getName()+', '+temp[1].getName()+')'+', '
+                ansString+='('+temp[0].getName()+ "->" +temp[1].getName()+')'+', '
             ansString = ansString[:-2]+'\n'
         return ansString[:-1]
     
@@ -297,6 +284,6 @@ def testProgram():
 #    print(outputs)
     ans = graphList[0]
     print(ans, "\n")
-    ans.contractNodes()
+#    ans.contractNodes()
     return ans #for now - graphList later
     
