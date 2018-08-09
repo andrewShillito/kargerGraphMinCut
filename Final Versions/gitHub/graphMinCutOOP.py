@@ -53,10 +53,10 @@ class Graph(object):
     
     def updateEdges(self, source, dest, newNode):
         """Remove self-loops and change source nodes/dest nodes of edges to newNode if necessary"""
-        #will iterate over self.edges[:]
+        #iterate over self.edges[:]
         #remove self loops from self.edges
         #update edge tail or head accordingly of edges connecting to newNode
-        #should simultaneously update graph
+        #since edges are changed the graph updates simultaneously
         for i in self.edges[:]:
             #removes self loops
             if i.tail==source and i.head==dest:
@@ -125,10 +125,6 @@ class Node(object):
     nodeDict = {} #purely for building graphs from the files given
     
     def __init__(self, name): #edges a list of edges??
-#        if name in Node.nodeDict:
-#            print("KeyError: A Node with that name already exists") #this error got raised
-#            raise KeyError
-#        else:
         self.name = name
         Node.nodeDict[name]=self
     
@@ -139,7 +135,7 @@ class Node(object):
         try:
             return Node.nodeDict[name]
         except KeyError:
-            return False
+            return False #this could redirect to graph keys if graph passed in
         
     def __str__(self):
         return "Node: "+self.name
@@ -259,19 +255,6 @@ def simpleTest():
 #    ans.contractNodes()
     return ans #for now - graphList later
 
-def testCaseTesting(numTrials):
-    graphList, outputs = constructGraph()
-    ansList = [] #append answers here
-    best = 10000
-    minCut = None
-    for graph in graphList:
-        print("Begin trial of:", graph)
-        tempBest, tempGraph = graphMinCut(graph, numTrials)
-        if tempBest<best:
-            best = tempBest
-            minCut = tempGraph
-    return best, minCut, test
-
 def singleGraphTest(numTrials, graphIndexNum):
     """builds graphs, runs numtrials karger algo on graph selected by graphIndex from graphList
     constructed by constructGraph()"""
@@ -282,6 +265,17 @@ def singleGraphTest(numTrials, graphIndexNum):
     best, minCut = graphMinCut(testGraph, numTrials)
     return best, minCut, int(output)==best
 
+def finalGraphTest(numTrials):
+    directory = os.getcwd()+"\\testCases\\"
+    testFiles = [i for i in os.listdir(directory) if "karger" in i]
+    for x in range(len(testFiles)):
+        graph = Graph()
+        testFileRead(directory+testFiles[x], graph)
+        Node.nodeDict = {}
+    ans = 17
+    best, minCut = graphMinCut(graph, numTrials)
+    return best, minCut, best==ans
 
-best, minCut, test = singleGraphTest(10, 0)
-print("\nBest:", best, test, minCut)
+#single graph test case testing - just change index for different graphs 0-5
+#best, minCut, test = singleGraphTest(100, 4)
+#print("\nBest:", best, test, minCut)
