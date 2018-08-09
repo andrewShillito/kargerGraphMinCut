@@ -5,15 +5,8 @@ Created on Tue Jul 31 19:34:35 2018
 
 @author: Andrew Shillito
 
-Current Status:
-    Creation of newNode edges now works using set XOR
-    need to modify other existing node lists - look into more set operations
-    
-    maybe should use sets instead of lists for graph[node]-edges
-    
-    the updateEdges func now works and also removes self-loops
-    however, it would be most efficient to also change the edges
-    of self.graph at the same time and to avoid creating new edges
+Possible Future Changes:
+    self.graph[node]->set() instead of list
 """
 
 import random, copy, os, re, pdb
