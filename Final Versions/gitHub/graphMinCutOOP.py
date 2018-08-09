@@ -32,7 +32,7 @@ class Graph(object):
     def contractNodes(self):
         """Karger's algorithm for random node contraction"""
         edge = self.selectEdge() #select random edge
-        print("Selected", edge)
+#        print("Selected", edge)
         source = edge.getSrc() #find source node
         dest = edge.getDest() #find destination node
         newNodeName = source.getName()+', '+dest.getName()
@@ -125,12 +125,12 @@ class Node(object):
     nodeDict = {} #purely for building graphs from the files given
     
     def __init__(self, name): #edges a list of edges??
-        if name in Node.nodeDict:
-            print("KeyError: A Node with that name already exists") #this error got raised
-            raise KeyError
-        else:
-            self.name = name
-            Node.nodeDict[name]=self
+#        if name in Node.nodeDict:
+#            print("KeyError: A Node with that name already exists") #this error got raised
+#            raise KeyError
+#        else:
+        self.name = name
+        Node.nodeDict[name]=self
     
     def getName(self):
         return self.name
@@ -244,6 +244,7 @@ def graphMinCut(graph, numTests):
         testGraph = copy.deepcopy(graph)
         while len(testGraph.graph)>2:
             testGraph.contractNodes() #this is the hub for the entire algorithm
+        Node.nodeDict.clear
         for node in testGraph.graph: #exactly 2 tests but each should be the same length
             if len(testGraph.graph[node])<best:
                 best = len(testGraph.graph[node])
@@ -260,6 +261,7 @@ def simpleTest():
 
 def testCaseTesting(numTrials):
     graphList, outputs = constructGraph()
+    ansList = [] #append answers here
     best = 10000
     minCut = None
     for graph in graphList:
@@ -268,13 +270,18 @@ def testCaseTesting(numTrials):
         if tempBest<best:
             best = tempBest
             minCut = tempGraph
-    return best, minCut
+    return best, minCut, test
 
 def singleGraphTest(numTrials, graphIndexNum):
     """builds graphs, runs numtrials karger algo on graph selected by graphIndex from graphList
     constructed by constructGraph()"""
     graphList, outputs = constructGraph()
     testGraph = graphList[graphIndexNum]
+    print(testGraph)
     output = outputs[graphIndexNum]
     best, minCut = graphMinCut(testGraph, numTrials)
     return best, minCut, int(output)==best
+
+
+best, minCut, test = singleGraphTest(10, 0)
+print("\nBest:", best, test, minCut)
