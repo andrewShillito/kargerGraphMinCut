@@ -36,72 +36,40 @@ class Graph(object):
         source = edge.getSrc() #find source node
         dest = edge.getDest() #find destination node
         newNodeName = source.getName()+', '+dest.getName()
-        
+
         #create new superNode
         newNode = Node(newNodeName)
-        self.addNode(newNode) #just leave as is - broke program somehow when I changed addNode function
-        
-        #show edgeList components that are from self.graph[source] or self.graph[dest] - seems to work
-#        testString = []
-#        for i in self.edges:
-#            if i in self.graph[source] or i in self.graph[dest]:
-#                testString.append(str(i)[6:])
-#        print("Relevant Self Edges: "+', '.join(testString))# - seems to work correctly
-        
-        #removes all edges from self.edges that are in self.graph[source] or self.graph[dest]
-#        pdb.set_trace()
-#        self.removeFromSelfEdges(source, dest)
-        
-        #show modified edgeList - seems to be modifying correctly
-#        testString = []
-#        for j in self.edges:
-#            if j in self.graph[source] or j in self.graph[dest]:
-#                testString.append(str(j)[6:])
-#        print("Self Edges: "+', '.join(testString))
-#         
-         #show set operation result
-#        print("set: ", set(self.graph[source]+self.graph[dest]))
-#        testString = []
-#        for z in set(self.graph[source])^set(self.graph[dest]): #I think this works
-#            testString.append(str(z)[6:])
-#        print("Set: "+', '.join(testString))
-        
+        self.addNode(newNode) #just leave as is - broke program somehow when I changed addNode function      
         self.graph[newNode]=list(set(self.graph[source])^set(self.graph[dest]))
-        
-        #possible way to update self.graph and self.edges
-#        pdb.set_trace()
-        print([str(i)[6:] for i in self.edges])
+
+#        print([str(i)[6:] for i in self.edges]))
         self.updateEdges(source, dest, newNode)
-        print([str(i)[6:] for i in self.edges])
-        self.updateGraph(source, dest, newNode)
+#        print([str(i)[6:] for i in self.edges]))
         
         del self.graph[source]
         del self.graph[dest]
-        #associate edges in self.graph with new Node
-        #make sure no self-loops in self.graph or self.edges
-        #delete old nodes and related edges from self.graph and self.edges
-        print(self)
+#        print(self)
         return None
     
     def updateEdges(self, source, dest, newNode):
-        """Change source nodes/dest nodes of self.edges to newNode if necessary
-        also removes self-loops - doesn't work - also would be preferable to use setters"""
-        self.edges[:] = [edge if (edge.getSrc()!=source and edge.getDest()!=dest) and (edge.getSrc()!=dest and edge.getDest()!=source)\
-                  else Edge(newNode, edge.head) if (edge.getSrc()==source or edge.getDest()==dest)\
-                  else Edge(edge.tail, newNode) if (edge.getDest()==source or edge.getDest()==dest) else edge for edge in self.edges]        
+        """Remove self-loops and change source nodes/dest nodes of edges to newNode if necessary"""
+        #will iterate over self.edges[:]
+        #remove self loops from self.edges
+        #update edge tail or head accordingly of edges connecting to newNode
+        #should simultaneously update graph
+        for i in self.edges[:]:
+            #removes self loops
+            if i.tail==source and i.head==dest:
+                self.edges.remove(i) #O(n) time each time
+            elif i.tail==dest and i.head==source:
+                self.edges.remove(i)
+            #updates edges
+            elif i.tail==source or i.tail==dest:
+                i.setSrc(newNode)
+            elif i.head==source or i.head==dest:
+                i.setDest(newNode)
         return None
-    
-    def updateGraph(self, source, dest, newNode):
-        """computationally expensive"""
-        self.graph = {node:[Edge(newNode, edge.head) if (edge.getSrc()==source or edge.getSrc()==dest) else Edge(edge.tail, newNode) if (edge.getDest()==source or edge.getDest()==dest) else edge for edge in self.graph[node]] for node in self.graph}
-        for i in self.graph:
-            for j in self.graph[i]:
-                if j.getSrc()==source or j.getSrc()==dest:
-                    j.setSrc(newNode)
-                elif j.getDest()==source or j.getDest()==dest:
-                    j.setDest(newNode)
-        return None
-    
+
     def selectEdge(self):
         randEdge = random.sample(self.edges, 1)[0]
         return randEdge
@@ -158,7 +126,7 @@ class Node(object):
     
     def __init__(self, name): #edges a list of edges??
         if name in Node.nodeDict:
-            print("KeyError: A Node with that name already exists")
+            print("KeyError: A Node with that name already exists") #this error got raised
             raise KeyError
         else:
             self.name = name
@@ -269,21 +237,44 @@ def graphMinCut(graph, numTests):
     graph.contractNodes() is the actual algorithm
     returns best (shortest length) min cut num"""
     best = 100000 #arbitrarily large num
+#    pdb.set_trace()
     for i in range(numTests):
-        testGraph = copy.deepCopy(graph)
-        while len(testGraph)>2:
+        if i%10==0:
+            print("Trial num:", i)
+        testGraph = copy.deepcopy(graph)
+        while len(testGraph.graph)>2:
             testGraph.contractNodes() #this is the hub for the entire algorithm
-        for node in testGraph: #exactly 2 tests but each should be the same length
-            if len(testGraph[node])<best:
-                best = len(testGraph[node])
-                minCutGraph = copy.deepCopy(testGraph)
+        for node in testGraph.graph: #exactly 2 tests but each should be the same length
+            if len(testGraph.graph[node])<best:
+                best = len(testGraph.graph[node])
+                minCutGraph = copy.deepcopy(testGraph)
     return best, minCutGraph
 
-def testProgram():
+def simpleTest():
     graphList, outputs = constructGraph()
 #    print(outputs)
     ans = graphList[0]
     print(ans, "\n")
 #    ans.contractNodes()
     return ans #for now - graphList later
-    
+
+def testCaseTesting(numTrials):
+    graphList, outputs = constructGraph()
+    best = 10000
+    minCut = None
+    for graph in graphList:
+        print("Begin trial of:", graph)
+        tempBest, tempGraph = graphMinCut(graph, numTrials)
+        if tempBest<best:
+            best = tempBest
+            minCut = tempGraph
+    return best, minCut
+
+def singleGraphTest(numTrials, graphIndexNum):
+    """builds graphs, runs numtrials karger algo on graph selected by graphIndex from graphList
+    constructed by constructGraph()"""
+    graphList, outputs = constructGraph()
+    testGraph = graphList[graphIndexNum]
+    output = outputs[graphIndexNum]
+    best, minCut = graphMinCut(testGraph, numTrials)
+    return best, minCut, int(output)==best
